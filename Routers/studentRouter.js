@@ -1,10 +1,8 @@
-// const express = require("express"); 
-// const router = express.Router(); 
-// const authController = require("../Controllers/authController")
-// const signupSchema = require("../Validators/authValidator")
-// const {validate} = require("../Middlewares/validateMiddleware")
+const express = require("express"); 
+const router = express.Router(); 
+const studentController = require("../Controllers/studentController")
 // const authMiddleware = require("../Middlewares/authMiddleware"); 
 
-// router.route("/fetchcourses").get( studentController.mainPage )
+router.route("/fetchallcourses").get( studentController.fetchAllCourses)
 
-// module.exports = router; 
+module.exports = router; 

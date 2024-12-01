@@ -14,6 +14,7 @@ const PORT = process.env.PORT || 8000
 // Requiring all the router modules 
 const authRouter = require("./Routers/authRouter")
 const providerRouter = require("./Routers/providerRouter")
+const studentRouter = require("./Routers/studentRouter")
 
 // Requiring all the middleware modules 
 const errorMiddleware = require("./Middlewares/errorMiddleware")
@@ -51,6 +52,7 @@ app.use(session({
 // Routers
 app.use("/api/auth", authRouter)
 app.use("/api/course", providerRouter)
+app.use("/api", studentRouter)
 
 
 app.use(errorMiddleware)

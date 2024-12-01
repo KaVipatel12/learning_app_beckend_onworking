@@ -3,6 +3,30 @@ const Provider = require("../Models/provider-model")
 const bcrypt = require("bcrypt")
 const jwt = require("jsonwebtoken");
 
+const providerProfile = async (req, res) => {
+  const providerId = req.provider._id; 
+
+  const providerData = await Provider.findById(providerId)
+
+  if(!providerData){
+     res.status(400).send({ msg : "Login to get the details"})
+  }
+
+  res.status(200).send({msg : providerData})
+}
+
+const userProfile = async (req, res) => {
+  const userId = req.user._id; 
+
+  const userData = await User.findById(userId)
+
+  if(!userData){
+     res.status(400).send({ msg : "Login to get the details"})
+  }
+
+  res.status(200).send({msg : userData})
+}
+
 const register = async (req, res) => {
     try {
       const { username, email, password, mobile, role } = req.body;
@@ -52,7 +76,6 @@ const register = async (req, res) => {
     }
   };
   
-
 const login = async (req, res) => {
         try {
           const { email, password } = req.body;
@@ -99,4 +122,4 @@ const login = async (req, res) => {
         }
   };
       
-module.exports = {register, login}
+module.exports = {register, login, providerProfile, userProfile}
