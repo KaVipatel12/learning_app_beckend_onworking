@@ -4,7 +4,7 @@ const Provider = require("../Models/provider-model");
 
 const authUserMiddleware = async (req, res, next) => {
     const token = req.header('Authorization');
-
+    console.log(token)
     if (!token) {
         return res.status(401).json({ message: "Unauthorized HTTP, Token not provided" });
     }
@@ -15,7 +15,7 @@ const authUserMiddleware = async (req, res, next) => {
         const isVerified = jwt.verify(jwtToken, process.env.JWT_SECRET);
         if (isVerified) {
             const userData = await User.findOne({ email: isVerified.email });
-
+            console.log(userData)
             if (!userData) {
                 return res.status(404).json({ msg: "User not found" });
             }

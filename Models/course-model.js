@@ -9,7 +9,9 @@ const chapterSchema = mongoose.Schema({
             title: { type: String, required: true },
             videoUrl: { type: String, required: true },
             previewLink: { type: String } // Optional
-        }
+        }],
+    comment:[
+          {type: mongoose.Schema.Types.ObjectId, ref: 'Comment'}
     ],
     courseId: { type: mongoose.Schema.Types.ObjectId, ref: 'Course', required: true }
 });

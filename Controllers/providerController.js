@@ -2,6 +2,8 @@ const Provider = require("../Models/provider-model")
 const {Course} = require("../Models/course-model")
 const {Chapter} = require("../Models/course-model")
 
+
+// Add the course by the provider, Adding the course details which is stored in the Course model
 const courseAddPage = async (req, res) => {
     const { title, description, category, price, duration, level, language, courseImage } = req.body;
     const providerId = req.provider._id;
@@ -37,6 +39,8 @@ const courseAddPage = async (req, res) => {
     }
     
 };
+
+// Update the course by the provider, Updating the course details which is stored in the Course model
 const courseUpdatePage = async (req, res) => {
     const { title, description, category, price, duration, level, language, courseImage } = req.body;
     const providerId = req.provider._id
@@ -65,6 +69,7 @@ const courseUpdatePage = async (req, res) => {
     
 };
 
+// Delete the course by the provider, Deleting the course details which is stored in the Course model
 const courseDeletePage = async (req, res) => {
     const providerId = req.provider._id;
     const courseId = "674c31b8992c7e1bb9bc4685";  // This should ideally come from req.params or req.body
@@ -94,7 +99,7 @@ const courseDeletePage = async (req, res) => {
     }
 };
 
-
+// Add the chapters in the course by the provider, Adding the chapters details which is stored in the chapter model
 const chapterAddPage = async (req, res) => {
     const chapters = req.body; // Array of chapters passed in the request body
     const courseId = "674c33e69f445a3f969f461e";  
@@ -133,6 +138,8 @@ const chapterAddPage = async (req, res) => {
     }
     
 };
+
+// Delete a chapter in the course by the provider, Delete a chapter details which is stored in the chapter model
 const chapterDeletePage = async (req, res) => {
     const chapterId = "674c346a9f445a3f969f4626"; 
     const courseId = "674c33e69f445a3f969f461e";
@@ -162,6 +169,8 @@ const chapterDeletePage = async (req, res) => {
     
     
 };
+
+// Update a chapter in the course by the provider, Update a chapter details which is stored in the chapter model
 const chapterUpdatePage = async (req, res) => {
     const { title, description, videos} = req.body;
     const chapterId = "674c34afbd0ebc13a6dfe82a"; 
@@ -181,5 +190,6 @@ const chapterUpdatePage = async (req, res) => {
     }
     
 };
+
 module.exports = {courseAddPage, courseUpdatePage, courseDeletePage, chapterAddPage, chapterDeletePage, chapterUpdatePage}
   

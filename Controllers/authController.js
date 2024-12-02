@@ -3,9 +3,11 @@ const Provider = require("../Models/provider-model")
 const bcrypt = require("bcrypt")
 const jwt = require("jsonwebtoken");
 
+
+// Profile of the provider 
 const providerProfile = async (req, res) => {
   const providerId = req.provider._id; 
-
+  
   const providerData = await Provider.findById(providerId)
 
   if(!providerData){
@@ -15,6 +17,7 @@ const providerProfile = async (req, res) => {
   res.status(200).send({msg : providerData})
 }
 
+// Profile of the User/Student
 const userProfile = async (req, res) => {
   const userId = req.user._id; 
 
@@ -27,6 +30,7 @@ const userProfile = async (req, res) => {
   res.status(200).send({msg : userData})
 }
 
+// Registration of Student/Provider / Admin 
 const register = async (req, res) => {
     try {
       const { username, email, password, mobile, role } = req.body;
@@ -75,7 +79,8 @@ const register = async (req, res) => {
       res.status(500).json({ msg: "Internal server error", error: error.message });
     }
   };
-  
+
+// Login of Student/Provider / Admin 
 const login = async (req, res) => {
         try {
           const { email, password } = req.body;

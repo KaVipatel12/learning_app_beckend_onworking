@@ -21,6 +21,9 @@ const userSchema = mongoose.Schema({
         type : String,
         default : "student"
     },
+    comment:[
+        {type: mongoose.Schema.Types.ObjectId, ref: 'Comment'}
+    ],
     purchaseProduct: [{
         product : String,
         category : String,

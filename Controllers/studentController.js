@@ -1,34 +1,73 @@
 const User = require("../Models/user-model")
-const Provider = require("../Models/provider-model")
 const {Course} = require("../Models/course-model")
+const {Chapter} = require("../Models/course-model")
+const Comment = require("../Models/comments-model")
+ 
 
-const fetchAllCourses = async (req, res) => {
-    try {
-      // Extract page and limit from query parameters with default values
-      const { page , limit} = req.query;
+// Add the comment by the user. 
+const addComment = async(req, res) => {
+  const {comment} = req.body;
+  const chapterId = "674c34afbd0ebc13a6dfe82a";
+  const userId = req.user._id; 
+
+  const inputComment = await Comment.create({
+    comment, chapterId, userId
+  }) 
+  console.log(inputComment)
+  if(!inputComment){
+    return res.status(400).send({msg : "Comment not added"})
+  }
   
-      // Convert page and limit to numbers
-      const pageNumber = parseInt(page);
-      const limitNumber = parseInt(limit);
+  //Adding the comment id in the chapter model in the student router. 
+  const updatedChapter = await Chapter.findByIdAndUpdate(
+    chapterId,
+    { $push: {comment: inputComment._id}},  
+    { new: true, useFindAndModify: false }
+  ); 
   
-      // Calculate the number of documents to skip
-      const skip = (pageNumber - 1) * limitNumber;
+  const updatedUser = await User.findByIdAndUpdate(
+    userId,
+    { $push: {comment: inputComment._id}},  // Push the course ID
+    { new: true, useFindAndModify: false }
+  ); 
+  return res.status(400).send({msg : "Comment added"},   updatedChapter, 
+    updatedUser)
+}
+
+// delete the comment by the user. 
+const deleteComment = async (req, res) => {
+  const commentId = "674da606b7bed6ce5efdced5"; 
+  const chapterId = "674c34afbd0ebc13a6dfe82a"; 
+  const userId = req.user._id; 
+
+  const deletedComment = await Comment.findByIdAndDelete(commentId);
   
-      // Fetch the data with pagination (skip and limit)
-      const courseData = await Course.find({}, "title price")
-        .skip(skip)
-        .limit(limitNumber);
-  
-      // Check if data is found
-      if (!courseData || courseData.length === 0) {
-        return res.status(404).send({ msg: "No more courses found" });
-      }
-  
-      // Send paginated data
-      res.status(200).send({ data: courseData, currentPage: pageNumber });
-    } catch (error) {
-      res.status(500).send({ msg: "Server error", error: error.message });
-    }
-  };
-  
-module.exports = {fetchAllCourses}
+  if (!deletedComment) {
+    return res.status(400).send({ msg: "Comment not deleted" });
+  }
+
+  const updatedChapter = await Chapter.findByIdAndUpdate(
+    chapterId,
+    { $pull: { comment: commentId } },
+    { new: true, useFindAndModify: false }
+  );
+
+  if (!updatedChapter) {
+    return res.status(400).send({ msg: "Error removing comment from chapter" });
+  }
+
+  const updatedUser = await User.findByIdAndUpdate(
+    userId,
+    { $pull: { comment: commentId } },
+    { new: true, useFindAndModify: false }
+  );
+
+  if (!updatedUser) {
+    return res.status(400).send({ msg: "Error removing comment from user" });
+  }
+
+  return res.status(200).send({ msg: "Comment deleted" });
+};
+
+
+module.exports = {addComment, deleteComment}
