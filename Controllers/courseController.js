@@ -2,34 +2,43 @@ const {Course} = require("../Models/course-model")
 const {Chapter} = require("../Models/course-model")
 
 
-// fetch all the courses title and price which is present in the database by infinite scrolling method 
-const fetchAllCourses = async (req, res) => {
-    try {
-      // Extract page and limit from query parameters with default values
-      const { page , limit} = req.query;
-  
+// Fetch all the courses or the specific searched course using regex, It is used on home page and searched page
+const fetchCourses = async (req, res) => {
+  try {
+      // Extract page, limit, and courseName from query parameters
+      const { page = 1, limit = 10, courseName } = req.query;
+
       // Convert page and limit to numbers
       const pageNumber = parseInt(page);
       const limitNumber = parseInt(limit);
-  
+
       // Calculate the number of documents to skip
       const skip = (pageNumber - 1) * limitNumber;
-  
-      // Fetch the data with pagination (skip and limit)
-      const courseData = await Course.find({}, "title price")
-        .skip(skip)
-        .limit(limitNumber);
-  
-      // Check if data is found
-      if (!courseData || courseData.length === 0) {
-        return res.status(404).send({ msg: "No more courses found" });
+
+      // Build the query object for fetching courses
+      let query = {};
+
+      if (courseName) {
+          // If courseName is provided, use a case-insensitive regex for matching
+          query.title = new RegExp(courseName, 'i');
       }
 
-      // Send paginated data
+      // Fetch the data with pagination and optional filter by courseName
+      const courseData = await Course.find(query, "title price")
+          .skip(skip)
+          .limit(limitNumber);
+
+      // Check if data is found
+      if (!courseData.length) {
+          return res.status(404).send({ msg: "No courses found" });
+      }
+
+      // Send the paginated data
       res.status(200).send({ data: courseData, currentPage: pageNumber });
-    } catch (error) {
+  } catch (error) {
+      // Handle any server errors
       res.status(500).send({ msg: "Server error", error: error.message });
-    }
+  }
 };
 
 // fetch specific course details which is present in the course database.  
@@ -114,6 +123,6 @@ const fetchChapterComments = async (req, res) => {
       console.error(err);
       return res.status(500).send({ msg: "An error occurred while fetching comments" });
     }
-  };
+};
 
-module.exports = {fetchAllCourses,  fetchChapterComments, fetchChapters, fetchChaptersMainPage, fetchCourseMainPage}
+module.exports = {fetchChapterComments, fetchChapters, fetchChaptersMainPage, fetchCourseMainPage, fetchCourses}

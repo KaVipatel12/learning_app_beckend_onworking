@@ -27,8 +27,11 @@ const courseSchema = mongoose.Schema({
     courseImage: { type: String, required: true },
     language: { type: String, required: true },
     syllabus: { type: String }, 
+    userId : { type: mongoose.Schema.Types.ObjectId, ref: "User"}, 
+    review : [
+        {type : mongoose.Schema.Types.ObjectId, ref: "Review"}],
     chapters: [
-        { type: mongoose.Schema.Types.ObjectId, ref: 'Chapter' } 
+        { type: mongoose.Schema.Types.ObjectId, ref: 'Chapter'} 
     ],
     provider: { type: mongoose.Schema.Types.ObjectId, ref: 'Provider', required: true }, 
     date: { type: Date, default: Date.now }
@@ -36,5 +39,4 @@ const courseSchema = mongoose.Schema({
 
 const Chapter = mongoose.model('Chapter', chapterSchema);
 const Course = mongoose.model('Course', courseSchema);
-
 module.exports = { Chapter, Course };

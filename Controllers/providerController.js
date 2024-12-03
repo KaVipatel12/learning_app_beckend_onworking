@@ -5,7 +5,7 @@ const {Chapter} = require("../Models/course-model")
 
 // Add the course by the provider, Adding the course details which is stored in the Course model
 const courseAddPage = async (req, res) => {
-    const { title, description, category, price, duration, level, language, courseImage } = req.body;
+    const {title, description, category, price, duration, level, language, courseImage } = req.body;
     const providerId = req.provider._id;
     
     try {
