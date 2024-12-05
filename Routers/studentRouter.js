@@ -7,6 +7,7 @@ router.route("/addcomment").post( authUserMiddleware ,studentController.addComme
 router.route("/deletecomment").delete( authUserMiddleware ,studentController.deleteComment)
 router.route("/addreview").post( authUserMiddleware,studentController.addReview)
 router.route("/updatereview").put( authUserMiddleware,studentController.updateReview)
+router.route("/fetchreview").get( authUserMiddleware,studentController.fetchReview) 
 router.route("/purchasecourse").get( authUserMiddleware,studentController.purchaseCourse)
 router.route("/fetchpurchasedcourse").get( authUserMiddleware,studentController.fetchPurchasedCourse)
 

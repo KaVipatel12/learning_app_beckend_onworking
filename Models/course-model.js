@@ -28,8 +28,6 @@ const courseSchema = mongoose.Schema({
     language: { type: String, required: true },
     syllabus: { type: String }, 
     userId : { type: mongoose.Schema.Types.ObjectId, ref: "User"}, 
-    review : [
-        {type : mongoose.Schema.Types.ObjectId, ref: "Review"}],
     chapters: [
         { type: mongoose.Schema.Types.ObjectId, ref: 'Chapter'} 
     ],

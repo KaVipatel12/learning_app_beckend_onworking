@@ -24,9 +24,6 @@ const userSchema = mongoose.Schema({
     comment:[
         {type: mongoose.Schema.Types.ObjectId, ref: 'Comment'}
     ],
-    review:[
-        {type: mongoose.Schema.Types.ObjectId, ref: 'Comment'}
-    ],
     purchaseCourse: [{
         course : String,
         purchaseDate: {

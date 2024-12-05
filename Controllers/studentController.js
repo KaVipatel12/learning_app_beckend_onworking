@@ -72,83 +72,127 @@ const deleteComment = async (req, res) => {
 // Adding the course review by the users who are enrolled in it
 const addReview = async (req, res) => {
 
-  const { review } = req.body; // Get the review from the request body
-  const courseId = "674c33e69f445a3f969f461e"; // Get courseId from the URL parameter
-  const userId = "674d834b98611d382b7c64ac";
-  if (!review || typeof review !== 'number') {
-    return res.status(400).send({ msg: 'Error' });
-  }
+  const {stars} = req.body; 
+  const courseId = "674c33e69f445a3f969f461e"
+  const userId = req.user._id
+  try{
 
-  try {
-
-    const isCourseAvailable = await User.findOne({
-      _id: new mongoose.Types.ObjectId(userId),
-      'purchaseCourse.course': {$in : new mongoose.Types.ObjectId(courseId)}
-    });
-
-    if(!isCourseAvailable){
-      return res.status(400).send({msg : "Purchase the course to review"})
+    // check if the user has purchased the course or not
+    const user = await User.findById(userId);
+    if (!user) {
+        return res.status(404).send({ message: "User not found." });
     }
 
-     const findReview = Review.findOne({userId}, 'review')
-     console.log(findReview)
-     if(findReview){
-      return res.status(400).send({msg : "Review can only be added  once"})
-     }
-
-      const addReview = await Review.create({
-      review , userId , courseId
-    })
+    // Check if the course is in the user's purchase history
+    const hasPurchased = user.purchaseCourse.some(purchase => purchase.course.toString() === courseId);
     
-    const updatedCourse = await Course.findByIdAndUpdate(
-      courseId,
-      { $push: { review: addReview._id } },  // Push the new review into the reviews array
-      { new: true, useFindAndModify: false }
-    );
-    const updatedUser = await User.findByIdAndUpdate(
-      userId,
-      { $push: { review: addReview._id } },  // Push the new review into the reviews array
-      { new: true, useFindAndModify: false }
-    );
-
-    if (!addReview) {
-      return res.status(404).send({ msg: ' Review not added.' });
+    if (!hasPurchased) {
+        return res.status(403).json({ message: "You can only review courses you have purchased." });
     }
 
-    return res.status(200).send({ msg: 'Thank you for your review!', course: addReview });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).send({ msg: 'There was an error adding your review.' });
+    let courseReview = await Review.findOne({courseId})
+    if(!courseReview){
+      courseReview = new Review({
+        courseId,
+        reviews: [{ userId, stars }]
+    }) 
+  }else{
+    const existingReview = courseReview.reviews.find(review => review.userId.equals(userId));
+
+            if (existingReview) {
+                return res.status(400).json({ message: "You have already reviewed this course." });
+            }
+           // Add new review to the reviews array
+            courseReview.reviews.push({ userId, stars });
+        }
+        // Save the review document
+        await courseReview.save();
+        return res.status(201).json({ message: "Review added successfully.", courseReview });
+  }
+  catch(error){
+    return res.status(500).send("There is some error")
   }
 };
 
 // updating the course review 
 const updateReview = async (req, res) => {
 
-  const { updatedReview } = req.body; // Get the review from the request body
+  const { stars } = req.body; // Get the review from the request body
 
-  const userId = "674be6a529f025251b882b45";
-  const reviewId = "674efbf592aecea4bd38bbc7";
-  if (!updatedReview || typeof updatedReview !== 'number') {
-    return res.status(400).send({ msg: 'Error' });
-  }
-
+  const userId = "674d834b98611d382b7c64ac";
+  const courseId = "674c33e69f445a3f969f461e"
   try {
-     const findReview = Review.findOne({userId})
-     if(!findReview){
-      return res.status(400).send({msg : "No reviews found"})
-     }
-    const updateReview = await Review.findById( reviewId , {review : updatedReview } , {new : true})
 
-    if (!updateReview) {
-      return res.status(404).send({ msg: ' Error in updating.' });
+    // Find the review document for the course and update the user's review
+    const result = await Review.findOneAndUpdate(
+        { 
+            courseId, // Match the course ID
+            "reviews.userId": userId // Match the user in the reviews array
+        },
+        { 
+            $set: { "reviews.$.stars": stars } // Update the stars for the matched user
+        },
+        { 
+            new: true // Return the updated document
+        }
+    );
+
+    if (!result) {
+        return res.status(404).json({ message: "Review not found for this user." });
     }
 
-    return res.status(200).send({ msg: 'Review updated Successfully!' +  updateReview });
-  } catch (error) {
-    console.error(error);
-    return res.status(500).send({ msg: 'There was an error adding your review.' });
-  }
+    res.status(200).json({ message: "Review updated successfully.", result });
+} catch (error) {
+    res.status(500).json({ message: "Error updating review.", error });
+}   return res.status(500).send({ msg: 'There was an error adding your review.' });
+};
+
+// fetching the review of a particular student.
+const fetchReview = async (req, res) => {
+  
+  const { stars } = req.body; // Get the review from the request body
+  const courseId = "674c33e69f445a3f969f461e"
+  const userId = req.user._id
+  try {
+    // Find the review for the course by the specific user
+    const courseReview = await Review.findOne({ courseId });
+
+    if (!courseReview) {
+        return res.status(404).json({ message: "No reviews found for this course." });
+    }
+
+    // Find the specific review for the user
+    const userReview = courseReview.reviews.find(review => review.userId.equals(userId));
+
+    if (!userReview) {
+        return res.status(404).json({ message: "User has not reviewed this course." });
+    }
+
+    // Return the user's review
+    res.status(200).json({ userReview });
+} catch (error) {
+    res.status(500).json({ message: "Error updating review.", error });
+}   return res.status(500).send({ msg: 'There was an error adding your review.' });
+};
+
+// fetching the review of all students and display the average review.
+const fetchMeanReview = async (req, res) => {
+
+  const courseId = "674c33e69f445a3f969f461e"
+
+  try {
+    // Find the review for the course by the specific user
+    const courseReview = await Review.findOne({ courseId });
+
+    if (!courseReview) {
+        return res.status(404).json({ message: "No reviews found for this course." });
+    }
+    // Return the user's review
+    res.status(200).json({ courseReview });
+    
+} catch (error) {
+    res.status(500).json({ message: "Error updating review.", error });
+}   return res.status(500).send({ msg: 'There was an error adding your review.' });
 };
 
 // purchase the course which user wants 
@@ -198,4 +242,4 @@ const fetchPurchasedCourse = async (req, res) => {
     res.status(500).send({msg : "There is some error in the server please try again later"})
   }
 }
-module.exports = {addComment, deleteComment, addReview, updateReview, purchaseCourse, fetchPurchasedCourse}
+module.exports = {addComment, deleteComment, addReview, updateReview, purchaseCourse, fetchPurchasedCourse, fetchReview}
