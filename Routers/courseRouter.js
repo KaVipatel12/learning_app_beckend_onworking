@@ -8,5 +8,6 @@ router.route("/fetchcoursemainpage").get(courseController.fetchCourseMainPage)
 router.route("/fetchchaptersmainpage").get( courseController.fetchChaptersMainPage)
 router.route("/fetchchapter").get(courseController.fetchChapters)
 router.route("/fetchcomments").get( authUserMiddleware ,courseController.fetchChapterComments)
+router.route("/fetchallreviews").get( courseController.fetchAllReviews)
 
 module.exports = router; 

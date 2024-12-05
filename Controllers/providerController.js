@@ -1,6 +1,8 @@
 const Provider = require("../Models/provider-model")
 const {Course} = require("../Models/course-model")
-const {Chapter} = require("../Models/course-model")
+const {Chapter} = require("../Models/course-model");
+const { fetchCourses } = require("./courseController");
+const { lineTo } = require("pdfkit");
 
 
 // Add the course by the provider, Adding the course details which is stored in the Course model

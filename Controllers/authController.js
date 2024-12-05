@@ -1,33 +1,54 @@
 const User = require("../Models/user-model")
+const {Course} = require("../Models/course-model")
 const Provider = require("../Models/provider-model")
 const bcrypt = require("bcrypt")
 const jwt = require("jsonwebtoken");
 
 
 // Profile of the provider 
+
 const providerProfile = async (req, res) => {
   const providerId = req.provider._id; 
-  
-  const providerData = await Provider.findById(providerId)
+  try{
+      const fetchDetails = await Provider.findById(providerId, "username email courses"); 
 
-  if(!providerData){
-     res.status(400).send({ msg : "Login to get the details"})
+      const courseIds = fetchDetails.courses.map(ids => ids)
+      let fetchCourse;
+      if(courseIds.length > 0){
+          fetchCourse = await Course.find({"_id" : {$in : courseIds}}, "title price duration courseImage")
+      }
+
+      if(!fetchDetails){
+          return res.status(400).send({msg : "Login to view the profile"})
+      }
+      
+      return res.status(200).send({msg : fetchDetails , courses : fetchCourse})
+  }catch(error){
+      res.status(500).send({msg : "Error"})
   }
-
-  res.status(200).send({msg : providerData})
 }
 
 // Profile of the User/Student
+
 const userProfile = async (req, res) => {
   const userId = req.user._id; 
+  try{
+      const fetchDetails = await User.findById(userId, "username mobile email purchaseCourse"); 
 
-  const userData = await User.findById(userId)
+      const courseIds = fetchDetails.purchaseCourse.map(ids => ids)
+      let fetchCourse;
+      if(courseIds.length > 0){
+          fetchCourse = await Course.find({"_id" : {$in : courseIds}}, "title price duration courseImage")
+      }
 
-  if(!userData){
-     res.status(400).send({ msg : "Login to get the details"})
+      if(!fetchDetails){
+          return res.status(400).send({msg : "Login to view the profile"})
+      }
+      
+      return res.status(200).send({msg : fetchDetails , courses : fetchCourse})
+  }catch(error){
+      res.status(500).send({msg : "Error"})
   }
-
-  res.status(200).send({msg : userData})
 }
 
 // Registration of Student/Provider / Admin 

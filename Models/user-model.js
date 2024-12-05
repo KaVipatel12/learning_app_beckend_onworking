@@ -7,7 +7,7 @@ const userSchema = mongoose.Schema({
     password: String,
     cart: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: "cart"
+        ref: "Cart"
     }],
     controll: {
         type: Number,

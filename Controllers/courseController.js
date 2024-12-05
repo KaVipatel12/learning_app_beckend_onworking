@@ -1,6 +1,6 @@
 const {Course} = require("../Models/course-model")
 const {Chapter} = require("../Models/course-model")
-
+const Review = require("../Models/review-model")
 
 // Fetch all the courses or the specific searched course using regex, It is used on home page and searched page
 const fetchCourses = async (req, res) => {
@@ -125,4 +125,28 @@ const fetchChapterComments = async (req, res) => {
     }
 };
 
-module.exports = {fetchChapterComments, fetchChapters, fetchChaptersMainPage, fetchCourseMainPage, fetchCourses}
+// fetching the review of all students and display the average review.
+const fetchAllReviews = async (req, res) => {
+
+  const courseId = "674c33e69f445a3f969f461e"
+
+  try {
+    // Find the review for the course by the specific user
+    const courseReview = await Review.findOne({courseId}, "reviews");
+    if (!courseReview) {
+      return res.status(404).json({ message: "No reviews found for this course." });
+    }
+    
+    const reviewArray = [2,4,5,1,6,7]   // fetching all the reviews and making an Array of it
+    const addReviews = reviewArray.reduce((acc, curr) => acc + curr , 0);   // Reducing the array in sum of all array elements
+    const averageReview = addReviews/ (reviewArray.length)     // Taking the average of reviews. 
+    const formattedAverage = averageReview.toFixed(1);         // Only one number after decimal point   eg. 3.22123 => 3.2
+    res.status(200).send({ msg : formattedAverage });
+
+} catch (error) {
+  console.log(error)
+   return res.status(500).send({ msg: "Error" });
+}
+};
+
+module.exports = {fetchChapterComments, fetchChapters, fetchChaptersMainPage, fetchCourseMainPage, fetchCourses, fetchAllReviews}
