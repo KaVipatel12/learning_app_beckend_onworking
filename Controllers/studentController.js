@@ -99,7 +99,6 @@ const addReview = async (req, res) => {
   const courseId = "674c33e69f445a3f969f461e"
   const userId = req.user._id
   try{
-
     // check if the user has purchased the course or not
     const user = await User.findById(userId);
     if (!user) {
@@ -137,7 +136,7 @@ const addReview = async (req, res) => {
   }
 };
 
-// updating the course review 
+// Updating the course review 
 const updateReview = async (req, res) => {
 
   const { stars } = req.body; // Get the review from the request body
@@ -170,7 +169,7 @@ const updateReview = async (req, res) => {
 }   
 };
 
-// fetching the review of a particular student.
+// Fetching the review of a particular student.
 const fetchReview = async (req, res) => {
   
   const { stars } = req.body; // Get the review from the request body
@@ -198,7 +197,7 @@ const fetchReview = async (req, res) => {
 }  
 };
 
-// purchase the course which user wants 
+// Purchase the course which user wants 
 const purchaseCourse = async (req, res) => {
   const courseIds = ["674c33e69f445a3f969f461e"];  // Assume this is an array of courseIds
   const userId = req.user._id; 
@@ -236,7 +235,7 @@ const purchaseCourse = async (req, res) => {
   }
 };
 
-// fetching the purchased course
+// Fetching the purchased course
 const fetchPurchasedCourse = async (req, res) => { 
   const userId = req.user._id
   try{
@@ -258,6 +257,7 @@ const fetchPurchasedCourse = async (req, res) => {
   }
 }
 
+// Cart functionality for a particular user
 const cartFunctionality = async (req, res) => {
   const courseId = "674c33e69f445a3f969f461e"; // Replace with actual dynamic courseId
   const userId = req.user._id; 
@@ -301,6 +301,8 @@ const cartFunctionality = async (req, res) => {
     return res.status(500).send({ msg: "Error occurred while processing the cart." });
   }
 };
+
+// fetching the cart of the particular user
 const fetchCart = async (req, res) => {
   const userId = req.user._id; 
 
