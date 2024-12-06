@@ -1,9 +1,6 @@
 const User = require("../Models/user-model")
 const Provider = require("../Models/provider-model")
-const {Chapter} = require("../Models/course-model")
-const {Course} = require("../Models/course-model")
-const Review = require("../Models/review-model")
-const Comment = require("../Models/comments-model")
+
 
 // Fetching all the users that has an account. 
 const fetchUsers = async (req, res) => {
