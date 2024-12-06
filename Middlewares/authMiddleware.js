@@ -27,7 +27,7 @@ const authUserMiddleware = async (req, res, next) => {
             return res.status(500).json({ msg: "Token verification failed" });
         }
     } catch (err) {
-        return res.status(500).json({ msg: "Token verification error", error: err.message });
+        return res.status(500).json({ msg: "Token verification error"});
     }
 };
 
@@ -55,7 +55,7 @@ const authProviderMiddleware = async (req, res, next) => {
             return res.status(401).json({ msg: "Token verification failed" });
         }
     } catch (err) {
-        return res.status(500).json({ msg: "Token verification error", error: err.message });
+        return res.status(500).json({ msg: "Token verification error"});
     }
 };
 
@@ -100,7 +100,7 @@ const courseAccessMiddleware = async(req, res, next) => {
                 }}
 
                 catch (err) {
-        return res.status(500).json({ msg: "Token verification error", error: err.message });
+        return res.status(500).json({ msg: "Token verification error"});
     }
 }
 const courseModifyMiddleware = async(req, res, next) => {
@@ -135,7 +135,35 @@ const courseModifyMiddleware = async(req, res, next) => {
             }
 
         catch (err) {
-        return res.status(500).json({ msg: "Token verification error", error: err.message });
+        return res.status(500).json({ msg: "Token verification error" });
     }
 }
-module.exports = {authUserMiddleware, authProviderMiddleware, courseAccessMiddleware, courseModifyMiddleware};
+
+const authAdminMiddleware = async(req, res, next) => {
+    const token = req.header('Authorization');
+    if (!token) {
+        return res.status(401).json({ message: "Unauthorized HTTP, Token not provided" });
+    }
+
+    // Remove 'Bearer' from token
+    const jwtToken = token.replace('Bearer', "").trim();
+    try {
+        const isVerified = jwt.verify(jwtToken, process.env.JWT_SECRET);
+        if (isVerified) {
+            const adminData = await User.findOne({ email: isVerified.email });
+            if (!adminData) {
+                return res.status(401).json({ msg: "Admin not found" });
+            }
+                if(adminData.controll === 2){
+                         req.admin = adminData;
+                         next();  // Continue to the next middleware or route
+                        }
+                    }else{
+                        res.status(400).send({msg : "Aunauthorized Access"})
+                    }
+              }catch (err) {
+                return res.status(500).json({ msg: "Token verification error"});
+                }
+}
+
+module.exports = {authUserMiddleware, authProviderMiddleware, courseAccessMiddleware, courseModifyMiddleware, authAdminMiddleware};

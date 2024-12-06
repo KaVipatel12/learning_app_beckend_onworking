@@ -16,6 +16,7 @@ const authRouter = require("./Routers/authRouter")
 const providerRouter = require("./Routers/providerRouter")
 const studentRouter = require("./Routers/studentRouter")
 const courseRouter = require("./Routers/courseRouter")
+const adminRouter = require("./Routers/adminRouter")
 
 // Requiring all the middleware modules 
 const errorMiddleware = require("./Middlewares/errorMiddleware")
@@ -54,6 +55,7 @@ app.use(session({
 app.use("/api/auth", authRouter)
 app.use("/api/educator", providerRouter)
 app.use("/api/course", courseRouter)
+app.use("/api/admin", adminRouter)
 app.use("/api", studentRouter)
 
 
