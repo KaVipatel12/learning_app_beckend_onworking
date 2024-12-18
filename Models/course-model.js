@@ -4,10 +4,11 @@ const mongoose = require('mongoose');
 const chapterSchema = mongoose.Schema({
     title: { type: String, required: true },
     description: { type: String, required: true },
+    duration: { type: Number, required: false },
     videos: [
         {
-            title: { type: String, required: true },
-            videoUrl: { type: String, required: true },
+            title: { type: String, required: false },
+            videoUrl: { type: String, required: false },
             previewLink: { type: String } // Optional
         }],
     comment:[
@@ -24,9 +25,9 @@ const courseSchema = mongoose.Schema({
     price: { type: Number, required: true },
     duration: { type: Number, required: true }, 
     level: { type: String, required: true },
-    courseImage: { type: String, required: true },
+    courseImage: { type: String, required: false },
     language: { type: String, required: true },
-    syllabus: { type: String }, 
+    syllabus: { type: String },     
     userId : { type: mongoose.Schema.Types.ObjectId, ref: "User"}, 
     chapters: [
         { type: mongoose.Schema.Types.ObjectId, ref: 'Chapter'} 

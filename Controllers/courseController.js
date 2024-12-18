@@ -24,7 +24,7 @@ const fetchCourses = async (req, res) => {
       }
 
       // Fetch the data with pagination and optional filter by courseName
-      const courseData = await Course.find(query, "title price")
+      const courseData = await Course.find(query, "title price provider courseImage")
           .skip(skip)
           .limit(limitNumber);
 
@@ -34,7 +34,14 @@ const fetchCourses = async (req, res) => {
       }
 
       // Send the paginated data
-      res.status(200).send({ data: courseData, currentPage: pageNumber });
+      const coursesWithImage = courseData.map(courses => {
+        return {
+            ...courses.toObject(), 
+            courseImage : `/uploads/${courses.courseImage}`
+        }
+      })
+
+      res.status(200).send({ msg: coursesWithImage, currentPage: pageNumber });
   } catch (error) {
       // Handle any server errors
       res.status(500).send({ msg: "Server error", error: error.message });
@@ -45,11 +52,11 @@ const fetchCourses = async (req, res) => {
 const fetchCourseMainPage = async (req, res) => {
     try {
       
-      const courseId = "674c33e69f445a3f969f461e"
+      const courseId = req.params.courseId; 
       const courseData = await Course.findById(courseId)  
 
       if (!courseData || courseData.length === 0) {
-        return res.status(404).send({ msg: "No more courses found" });
+        return res.status(404).send({ msg: "No courses found" });
       }
 
       res.status(200).send({ msg: courseData });
@@ -60,7 +67,7 @@ const fetchCourseMainPage = async (req, res) => {
 
 // fetch all the chapters of the specific course present in the database  
 const fetchChaptersMainPage = async(req, res) => {
-  const courseId = "674c33e69f445a3f969f461e";
+  const courseId = req.params.courseId;
 
   try{
     const chapters = await Chapter.find({courseId}, "title")
@@ -77,11 +84,11 @@ const fetchChaptersMainPage = async(req, res) => {
 
 // fetch specific chapter details which is present in the database 
 const fetchChapters = async(req, res) => {
-  const courseId = "674c33e69f445a3f969f461e";
-
+  const chapterId = req.params.chapterId;
+  console.log(chapterId)
   try{
 
-    const chapters = await Chapter.find({courseId}).populate({
+    const chapters = await Chapter.findById(chapterId).populate({
       path: 'comment',           
       populate: {
         path: 'userId',          
@@ -89,7 +96,6 @@ const fetchChapters = async(req, res) => {
       }
     })
 
-      console.log(chapters)
       if(!chapters){
         return res.status(400).send({msg : "Chapters not added"})
       }

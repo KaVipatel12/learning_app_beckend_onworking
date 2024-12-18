@@ -55,7 +55,7 @@ const userProfile = async (req, res) => {
 const register = async (req, res) => {
     try {
       const { username, email, password, mobile, role } = req.body;
-
+      console.log(req.body)
       console.log(req.body)
       // Validate role
       if (role !== "student" && role !== "provider") {

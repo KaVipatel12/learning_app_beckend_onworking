@@ -9,7 +9,7 @@ const session = require('express-session');
 const cors = require("cors"); 
 const connectDb = require("./Utils/db")
 const PORT = process.env.PORT || 8000 
-
+const cloudinary = require("cloudinary")
 
 // Requiring all the router modules 
 const authRouter = require("./Routers/authRouter")
@@ -27,14 +27,16 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, "public")));
 app.use(cookieParser());
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/uploads', express.static('uploads'));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-app.use(cors({
-  origin: ['https://yourfrontenddomain.com'],  // Replace with your frontend domain
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
-  credentials: true // Allow cookies to be sent
-}));
+
+// setting up the cloudinary variables
+cloudinary.config({ 
+  cloud_name: process.env.CLOUD_NAME, 
+  api_key: process.env.CLOUD_API_KEY, 
+  api_secret: process.env.CLOUD_API_SECRET // Click 'View API Keys' above to copy your API secret
+});
 
 app.use(session({
   secret: process.env.SESSION_SECRET_KEY,
@@ -50,7 +52,12 @@ app.use(session({
   }
 }));
 
-
+app.use(cors({
+  origin: ['http://localhost:3000', 'https://api.cloudinary.com/v1_1/dxfsjtzoq/image/upload'],  // Replace with your frontend domain
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true // Allow cookies to be sent
+}));
+app.options('*', cors());  // This is to handle the preflight CORS request
 // Routers
 app.use("/api/auth", authRouter)
 app.use("/api/educator", providerRouter)

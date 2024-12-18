@@ -5,9 +5,9 @@ const { authUserMiddleware } = require("../Middlewares/authMiddleware");
 const { courseAccessMiddleware } = require("../Middlewares/authMiddleware");
 
 router.route("/fetchcourses").get(courseController.fetchCourses)   
-router.route("/fetchcoursemainpage").get(courseController.fetchCourseMainPage)
-router.route("/fetchchaptersmainpage").get( courseController.fetchChaptersMainPage)
-router.route("/fetchchapter").get(courseAccessMiddleware,courseController.fetchChapters)
+router.route("/fetchcoursemainpage/:courseId").get(courseController.fetchCourseMainPage)
+router.route("/fetchchaptersmainpage/:courseId").get( courseController.fetchChaptersMainPage)
+router.route("/fetchchapter/:chapterId").get(courseAccessMiddleware, courseController.fetchChapters)
 router.route("/fetchcomments").get( courseAccessMiddleware ,courseController.fetchChapterComments)
 router.route("/fetchallreviews").get(courseController.fetchAllReviews)
 

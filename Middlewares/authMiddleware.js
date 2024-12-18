@@ -44,7 +44,7 @@ const authProviderMiddleware = async (req, res, next) => {
         if (isVerified) {
             const providerData = await Provider.findOne({ email: isVerified.email });
             if (!providerData) {
-                return res.status(401).json({ msg: "User not found" });
+                return res.status(403).json({ msg: "User not found" });
             }
              
             if(providerData.role === "provider"){
@@ -52,7 +52,7 @@ const authProviderMiddleware = async (req, res, next) => {
                 next();  // Continue to the next middleware or route
                 }
         } else {
-            return res.status(401).json({ msg: "Token verification failed" });
+            return res.status(403).json({ msg: "Token verification failed" });
         }
     } catch (err) {
         return res.status(500).json({ msg: "Token verification error"});
@@ -60,7 +60,7 @@ const authProviderMiddleware = async (req, res, next) => {
 };
 
 const courseAccessMiddleware = async(req, res, next) => {
-    const courseId = "674c33e69f445a3f969f461e"
+    const courseId = req.params.chapterId; 
     const token = req.header('Authorization');
     if (!token) {
         return res.status(401).json({ message: "Unauthorized HTTP, Token not provided" });
@@ -104,8 +104,9 @@ const courseAccessMiddleware = async(req, res, next) => {
     }
 }
 const courseModifyMiddleware = async(req, res, next) => {
-    const courseId = "674c33e69f445a3f969f461e"
+    const courseId = req.params.courseId
     const token = req.header('Authorization');
+    console.log("reached")
     if (!token) {
         return res.status(401).json({ message: "Unauthorized HTTP, Token not provided" });
     }
@@ -116,7 +117,7 @@ const courseModifyMiddleware = async(req, res, next) => {
         const isVerified = jwt.verify(jwtToken, process.env.JWT_SECRET);
         if (isVerified) {
             const providerData = await Provider.findOne({ email: isVerified.email });
-            console.log(providerData)
+            console.log( "This is the provider data" + providerData)
             if (!providerData) {
                 return res.status(401).json({ msg: "User not found" });
             }
