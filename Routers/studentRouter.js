@@ -10,9 +10,9 @@ router.route("/fetchcomment").get( authUserMiddleware ,studentController.fetchCo
 router.route("/addreview").post( courseAccessMiddleware,studentController.addReview)
 router.route("/updatereview").put( courseAccessMiddleware,studentController.updateReview)
 router.route("/fetchreview").get( courseAccessMiddleware,studentController.fetchReview) 
-router.route("/purchasecourse").get( authUserMiddleware,studentController.purchaseCourse)
+router.route("/purchasecourse").post( authUserMiddleware,studentController.purchaseCourse)
 router.route("/fetchpurchasedcourse").get( authUserMiddleware,studentController.fetchPurchasedCourse)
-router.route("/cartfunctionality").get( authUserMiddleware,studentController.cartFunctionality)
+router.route("/cartfunctionality/:courseId").get( authUserMiddleware,studentController.cartFunctionality)
 router.route("/fetchcart").get( authUserMiddleware,studentController.fetchCart)
 
 module.exports = router; 

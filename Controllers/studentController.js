@@ -199,7 +199,7 @@ const fetchReview = async (req, res) => {
 
 // Purchase the course which user wants 
 const purchaseCourse = async (req, res) => {
-  const courseIds = ["674c33e69f445a3f969f461e"];  // Assume this is an array of courseIds
+  const courseIds = req.body;  // Assume this is an array of courseIds
   const userId = req.user._id; 
 
   try {
@@ -259,7 +259,7 @@ const fetchPurchasedCourse = async (req, res) => {
 
 // Cart functionality for a particular user
 const cartFunctionality = async (req, res) => {
-  const courseId = "674c33e69f445a3f969f461e"; // Replace with actual dynamic courseId
+  const courseId = req.params.courseId; 
   const userId = req.user._id; 
 
   try {

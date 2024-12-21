@@ -33,7 +33,7 @@ const providerProfile = async (req, res) => {
 const userProfile = async (req, res) => {
   const userId = req.user._id; 
   try{
-      const fetchDetails = await User.findById(userId, "username mobile email purchaseCourse"); 
+      const fetchDetails = await User.findById(userId, "username mobile email purchaseCourse controll"); 
 
       const courseIds = fetchDetails.purchaseCourse.map(ids => ids)
       let fetchCourse;

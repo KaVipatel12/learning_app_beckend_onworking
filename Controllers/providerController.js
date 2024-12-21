@@ -190,8 +190,6 @@ const courseDeletePage = async (req, res) => {
 const chapterAddPage = async (req, res) => {
     const chapters = req.body ? JSON.parse(req.body.chapters) : []; // Parse chapters from request body
     const courseId = req.params.courseId;
-    const files = req.files; // Access all uploaded files
-
     try {
         if (!chapters || chapters.length === 0) {
             return res.status(400).send({ msg: "No chapters provided" });
@@ -201,13 +199,12 @@ const chapterAddPage = async (req, res) => {
 
         // Iterate over chapters and create each one with its corresponding video
         for (let i = 0; i < chapters.length; i++) {
-            const { title, description } = chapters[i];
-            const courseVideo = files[i]?.filename || null; // Match each file by index
+            const { title, description, videoUrl } = chapters[i];
 
             const newChapter = await Chapter.create({
                 title,
                 description,
-                videos: courseVideo,
+                videoUrl,
                 courseId,
             });
 

@@ -60,7 +60,7 @@ const authProviderMiddleware = async (req, res, next) => {
 };
 
 const courseAccessMiddleware = async(req, res, next) => {
-    const courseId = req.params.chapterId; 
+    const courseId = req.params.courseId; 
     const token = req.header('Authorization');
     if (!token) {
         return res.status(401).json({ message: "Unauthorized HTTP, Token not provided" });
@@ -155,7 +155,7 @@ const authAdminMiddleware = async(req, res, next) => {
             if (!adminData) {
                 return res.status(401).json({ msg: "Admin not found" });
             }
-                if(adminData.controll === 2){
+                if(adminData.controll === 0){
                          req.admin = adminData;
                          next();  // Continue to the next middleware or route
                         }

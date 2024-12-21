@@ -5,8 +5,8 @@ const Review = require("../Models/review-model")
 // Fetch all the courses or the specific searched course using regex, It is used on home page and searched page
 const fetchCourses = async (req, res) => {
   try {
-      // Extract page, limit, and courseName from query parameters
-      const { page = 1, limit = 10, courseName } = req.query;
+      // Extract page, limit, courseName, provider, and category from query parameters
+      const { page = 1, limit = 10, courseName, provider, category } = req.query;
 
       // Convert page and limit to numbers
       const pageNumber = parseInt(page);
@@ -18,13 +18,23 @@ const fetchCourses = async (req, res) => {
       // Build the query object for fetching courses
       let query = {};
 
+      // Filter by courseName if provided
       if (courseName) {
-          // If courseName is provided, use a case-insensitive regex for matching
-          query.title = new RegExp(courseName, 'i');
+          query.title = new RegExp(courseName, 'i'); // case-insensitive search for course name
       }
 
-      // Fetch the data with pagination and optional filter by courseName
-      const courseData = await Course.find(query, "title price provider courseImage")
+      // Filter by provider if provided
+      if (provider) {
+          query.provider = new RegExp(provider, 'i'); // case-insensitive search for provider
+      }
+
+      // Filter by category if provided
+      if (category) {
+          query.category = new RegExp(category, 'i'); // case-insensitive search for category
+      }
+
+      // Fetch the data with pagination and optional filters
+      const courseData = await Course.find(query, "title price provider courseImage category")
           .skip(skip)
           .limit(limitNumber);
 
@@ -33,14 +43,15 @@ const fetchCourses = async (req, res) => {
           return res.status(404).send({ msg: "No courses found" });
       }
 
-      // Send the paginated data
+      // Format course data and include the image path
       const coursesWithImage = courseData.map(courses => {
         return {
             ...courses.toObject(), 
             courseImage : `/uploads/${courses.courseImage}`
         }
-      })
+      });
 
+      // Send the paginated data
       res.status(200).send({ msg: coursesWithImage, currentPage: pageNumber });
   } catch (error) {
       // Handle any server errors
@@ -70,7 +81,7 @@ const fetchChaptersMainPage = async(req, res) => {
   const courseId = req.params.courseId;
 
   try{
-    const chapters = await Chapter.find({courseId}, "title")
+    const chapters = await Chapter.find({courseId}, "title courseId")
 
       console.log(chapters)
       if(!chapters){

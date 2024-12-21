@@ -12,7 +12,7 @@ router.route("/fetchchapters/:courseId").get(courseAccessMiddleware, providerCon
 router.route("/fetchchaptermainpage/:chapterId").get(courseAccessMiddleware, providerController.fetchProviderChapterMainPage )
 router.route("/updatecourse/:courseId").put(courseModifyMiddleware, providerController.courseUpdatePage)
 router.route("/deletecourse/:courseId").delete(courseModifyMiddleware, providerController.courseDeletePage)
-router.route("/addchapters/:courseId").post(courseModifyMiddleware, upload.single('courseVideo'), providerController.chapterAddPage )
+router.route("/addchapters/:courseId").post(courseModifyMiddleware, providerController.chapterAddPage )
 router.route("/deletechapter/:courseId/:chapterId").delete(courseModifyMiddleware, providerController.chapterDeletePage )
 router.route("/updatechapter/:courseId/:chapterId").put(courseModifyMiddleware, providerController.chapterUpdatePage )
 
