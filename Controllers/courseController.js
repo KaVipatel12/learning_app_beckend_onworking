@@ -70,7 +70,12 @@ const fetchCourseMainPage = async (req, res) => {
         return res.status(404).send({ msg: "No courses found" });
       }
 
-      res.status(200).send({ msg: courseData });
+      const courseDataWithImage = {
+            ...courseData.toObject(), 
+            courseImage : `/uploads/${courseData.courseImage}`
+        }
+      
+      res.status(200).send({ msg: courseDataWithImage });
     } catch (error) {
       res.status(500).send({ msg: "Server error", error: error.message });
     }
@@ -118,20 +123,25 @@ const fetchChapters = async(req, res) => {
 
 // fetch all the comments of specific chapter
 const fetchChapterComments = async (req, res) => {
-    const chapterId  = "674c34afbd0ebc13a6dfe82a";  
+    const chapterId  = req.params.chapterId;  
   
     try {
       const chapter = await Chapter.findById(chapterId)
-        .populate({
-          path: 'comment',  // Populate the comment field in the chapter
-          model: 'Comment',  // Specify the Comment model
-          select: 'comment userId'  // Specify the fields you want from the Comment model
-        });
+      .populate({
+        path: 'comment', // Populate the comment field in the chapter
+        model: 'Comment', // Specify the Comment model
+        select: 'comment userId createdAt', // Specify the fields you want from the Comment model
+        populate: {
+          path: 'userId', // Populate the userId field within each comment
+          model: 'User', // Specify the User model
+          select: 'username email', // Specify the fields you want from the User model
+        },
+      });
   
       if (!chapter) {
         return res.status(404).send({ msg: "Chapter not found" });
       }
-  
+
       return res.status(200).send({
         msg: "Comments fetched successfully",
         comments: chapter.comment  // Return the comments associated with this chapter

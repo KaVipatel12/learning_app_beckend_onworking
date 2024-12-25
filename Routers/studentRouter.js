@@ -4,12 +4,11 @@ const studentController = require("../Controllers/studentController");
 const { authUserMiddleware } = require("../Middlewares/authMiddleware");
 const { courseAccessMiddleware } = require("../Middlewares/authMiddleware");
 
-router.route("/addcomment").post( courseAccessMiddleware ,studentController.addComment)
-router.route("/deletecomment").delete( courseAccessMiddleware ,studentController.deleteComment)
+router.route("/addcomment/:courseId/:chapterId").post( courseAccessMiddleware ,studentController.addComment)
+router.route("/deletecomment/:courseId/:chapterId/:commentId").delete( courseAccessMiddleware ,studentController.deleteComment)
 router.route("/fetchcomment").get( authUserMiddleware ,studentController.fetchComment)
-router.route("/addreview").post( courseAccessMiddleware,studentController.addReview)
-router.route("/updatereview").put( courseAccessMiddleware,studentController.updateReview)
-router.route("/fetchreview").get( courseAccessMiddleware,studentController.fetchReview) 
+router.route("/addreview/:courseId").post( courseAccessMiddleware,studentController.addOrUpdateReview)
+router.route("/fetchreview/:courseId").get(courseAccessMiddleware ,studentController.fetchReview) 
 router.route("/purchasecourse").post( authUserMiddleware,studentController.purchaseCourse)
 router.route("/fetchpurchasedcourse").get( authUserMiddleware,studentController.fetchPurchasedCourse)
 router.route("/cartfunctionality/:courseId").get( authUserMiddleware,studentController.cartFunctionality)
