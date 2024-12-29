@@ -53,7 +53,7 @@ app.use(session({
 }));
 
 app.use(cors({
-  origin: ['http://localhost:3000', 'https://api.cloudinary.com/v1_1/dxfsjtzoq/image/upload'],  // Replace with your frontend domain
+  origin: ['http://localhost:3000'],  // Replace with your frontend domain
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true // Allow cookies to be sent
 }));

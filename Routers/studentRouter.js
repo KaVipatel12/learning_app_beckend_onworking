@@ -12,6 +12,5 @@ router.route("/fetchreview/:courseId").get(courseAccessMiddleware ,studentContro
 router.route("/purchasecourse").post( authUserMiddleware,studentController.purchaseCourse)
 router.route("/fetchpurchasedcourse").get( authUserMiddleware,studentController.fetchPurchasedCourse)
 router.route("/cartfunctionality/:courseId").get( authUserMiddleware,studentController.cartFunctionality)
-router.route("/fetchcart").get( authUserMiddleware,studentController.fetchCart)
-
+router.route("/fetchcart/:courseId").get( authUserMiddleware,studentController.fetchCart)
 module.exports = router; 

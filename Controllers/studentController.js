@@ -183,7 +183,7 @@ const fetchReview = async (req, res) => {
 
 // Purchase the course which user wants 
 const purchaseCourse = async (req, res) => {
-  const courseIds = req.body;  // Assume this is an array of courseIds
+  const courseData = req.body;  // Assume this is an array of courseIds
   const userId = req.user._id; 
 
   try {
@@ -191,28 +191,34 @@ const purchaseCourse = async (req, res) => {
     const user = await User.findById(userId);
 
     // Filter out already purchased courses
-    const alreadyPurchasedCourseIds = user.purchaseCourse.map(p => p.course.toString()); 
-    const newCourses = courseIds.filter(courseId => !alreadyPurchasedCourseIds.includes(courseId));
+    const alreadyPurchasedCourseIds = user.purchaseCourse.map(p => p.courseId.toString()); 
+    const newCourses = courseData.filter(course => !alreadyPurchasedCourseIds.includes(course.courseId));
 
     // If no new courses to add, return a message
     if (newCourses.length === 0) {
-      return res.status(400).send({ msg: "All courses are already purchased" });
+      return res.status(400).send({ msg: "Already purchased" });
     }
-
+    
     // If there are new courses to add, push them to the user's purchaseCourse array
     const purchaseCourse = await User.findByIdAndUpdate(
       userId,
       { 
         $push: { 
           purchaseCourse: { 
-            $each: newCourses.map(courseId => ({ course: courseId })) 
+            $each: newCourses.map(course => ({ courseId: course.courseId , title : course.title, category : course.category })) 
           } 
         } 
       },
       { new: true }
     );
 
+    if ( purchaseCourse && newCourses.length === 1) {
+        if (newCourses.length === 1) {
+          return res.status(200).send({ msg: "Course purchased successfully" });
+        }
     return res.status(200).send({ msg: "Courses purchased successfully" });
+    }
+
   } catch (error) {
     console.log(error);
     return res.status(500).send({ msg: "Server error, please try again later" });
@@ -228,9 +234,10 @@ const fetchPurchasedCourse = async (req, res) => {
   // store the course id in the courseId array
   const courseIds = purchasedCourse.purchaseCourse.map(item => new mongoose.Types.ObjectId(item.course))
 
-  const purchasedCourseDetails = await Course.find({ _id: { $in: courseIds }}, "title duration courseImage"); 
+  const purchasedCourseDetails = await Course.find({ _id: { $in: courseIds }}, "title category duration courseImage"); 
 
   if(purchasedCourse){
+    console.log( "This is the purchased courses:" + purchasedCourseDetails)
     return res.status(200).send({ msg : purchasedCourseDetails})
   }else{
     return res.status(400).send({ msg : "There is some error"})
@@ -247,44 +254,44 @@ const cartFunctionality = async (req, res) => {
   const userId = req.user._id; 
 
   try {
-    // Find user cart or create one if not found
-    let findUser = await Cart.findOne({ userId });
+    // Find the user's cart
+    let userCart = await Cart.findOne({ userId });
 
-    if (!findUser) {
-      const addCart = await Cart.create({
+    if (!userCart) {
+      // Create a new cart if no cart exists
+      const newCart = await Cart.create({
         userId,
         cartItems: [{ courseId, createdAt: Date.now() }]
       });
 
-      if (addCart) {
-        return res.status(200).send({ msg: "Added to the cart" });
-      }
+      // Associate the new cart with the user
+      await User.findByIdAndUpdate(userId, {cart: newCart._id});
+
+      return res.status(200).send({ msg: "Item added to cart" });
     } else {
-      // Checking if the course already exists in the cart
-      const courseExists = findUser.cartItems.some(item => item.courseId.equals(courseId));
+      // Check if the course is already in the cart
+      const courseExists = userCart.cartItems.some(item => item.courseId.equals(courseId));
 
-      if (!courseExists) {
-        // If the course does not exist, add it to the cart
-        findUser.cartItems.push({ courseId, createdAt: Date.now() });
-        // Save the updated cart and add the cart ID to the user's cart array
-        await findUser.save();
-        await User.findByIdAndUpdate(userId, { $push: { cart: findUser._id } });
-        return res.status(200).send({ msg: "Added to the cart" });
-      } else {
-        // If the course exists, remove it from the cart
-        findUser.cartItems.pull({ courseId });
+      if (courseExists) { 
+        // Remove the course if it exists
+        userCart.cartItems = userCart.cartItems.filter(item => !item.courseId.equals(courseId));
+        await userCart.save();
 
-        // Save the updated cart and remove the cart ID from the user's cart array
-        await findUser.save();
-        await User.findByIdAndUpdate(userId, { $pull: { cart: findUser._id } });
         return res.status(200).send({ msg: "Removed from the cart" });
+      } else {
+        // Add the new course to the existing cart
+        userCart.cartItems.push({ courseId, createdAt: Date.now() });
+        await userCart.save();
+
+        return res.status(200).send({ msg: "Added to the cart" });
       }
     }
   } catch (error) {
-    console.log(error);
+    console.error("Error in cart functionality:", error);
     return res.status(500).send({ msg: "Error occurred while processing the cart." });
   }
 };
+
 
 // fetching the cart of the particular user
 const fetchCart = async (req, res) => {

@@ -5,10 +5,10 @@ const userSchema = mongoose.Schema({
     mobile: String,
     email: String,
     password: String,
-    cart: [{
+    cart: {
         type: mongoose.Schema.Types.ObjectId,
         ref: "Cart"
-    }],
+    },
     controll: {
         type: Number,
         default: 0    // 0 -> user, 1 -> Admin, 2 -> Editor 
@@ -25,7 +25,9 @@ const userSchema = mongoose.Schema({
         {type: mongoose.Schema.Types.ObjectId, ref: 'Comment'}
     ],
     purchaseCourse: [{
-        course : String,
+        courseId : String,
+        title : String, 
+        category : String,
         purchaseDate: {
             type : Date,
             default: Date.now

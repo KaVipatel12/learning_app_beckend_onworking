@@ -33,7 +33,14 @@ const providerProfile = async (req, res) => {
 const userProfile = async (req, res) => {
   const userId = req.user._id; 
   try{
-      const fetchDetails = await User.findById(userId, "username mobile email purchaseCourse controll"); 
+      const fetchDetails = await User.findById(userId, "username mobile email purchaseCourse controll cart")  
+      .populate({
+        path: "cart", // Populate the 'cart' field from the Cart model
+        populate: {
+          path: "cartItems.courseId", // Populate 'courseId' inside 'cartItems'
+          model: "Course" // Specify the model name
+        }
+      }); 
 
       const courseIds = fetchDetails.purchaseCourse.map(ids => ids)
       let fetchCourse;

@@ -159,7 +159,7 @@ const fetchChapterComments = async (req, res) => {
 // fetching the review of all students and display the average review.
 const fetchAllReviews = async (req, res) => {
 
-  const courseId = "674c33e69f445a3f969f461e"
+  const courseId = req.params.courseId; 
 
   try {
     // Find the review for the course by the specific user
@@ -167,8 +167,13 @@ const fetchAllReviews = async (req, res) => {
     if (!courseReview) {
       return res.status(404).json({ message: "No reviews found for this course." });
     }
+    console.log(courseReview)
+    const reviewArray = []
+    courseReview.reviews.forEach(course => {
+      reviewArray.push(course.stars)
+    })
     
-    const reviewArray = [2,4,5,1,6,7]   // fetching all the reviews and making an Array of it
+        console.log(reviewArray)
     const addReviews = reviewArray.reduce((acc, curr) => acc + curr , 0);   // Reducing the array in sum of all array elements
     const averageReview = addReviews/ (reviewArray.length)     // Taking the average of reviews. 
     const formattedAverage = averageReview.toFixed(1);         // Only one number after decimal point   eg. 3.22123 => 3.2
