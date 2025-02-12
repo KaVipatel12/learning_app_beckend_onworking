@@ -111,12 +111,6 @@ const addOrUpdateReview = async (req, res) => {
           return res.status(404).send({ message: "User not found." });
       }
 
-      // Check if the user has purchased the course
-      const hasPurchased = user.purchaseCourse.some(purchase => purchase.course.toString() === courseId);
-      if (!hasPurchased) {
-          return res.status(403).json({ message: "You can only review courses you have purchased." });
-      }
-
       // Find the review document for the course
       let courseReview = await Review.findOne({ courseId });
       let existingReview = null; // Define existingReview in a broader scope
@@ -158,7 +152,7 @@ const addOrUpdateReview = async (req, res) => {
 const fetchReview = async (req, res) => {
   
   const courseId = req.params.courseId; 
-  const userId = req.user._id
+  const userId = req.user._id; 
   try {
     // Find the review for the course by the specific user
     const courseReview = await Review.findOne({ courseId });

@@ -4,7 +4,6 @@ const Provider = require("../Models/provider-model");
 
 const authUserMiddleware = async (req, res, next) => {
     const token = req.header('Authorization');
-    console.log(token)
     if (!token) {
         return res.status(401).json({ message: "Unauthorized HTTP, Token not provided" });
     }
@@ -15,7 +14,6 @@ const authUserMiddleware = async (req, res, next) => {
         const isVerified = jwt.verify(jwtToken, process.env.JWT_SECRET);
         if (isVerified) {
             const userData = await User.findOne({ email: isVerified.email });
-            console.log(userData)
             if (!userData) {
                 return res.status(404).json({ msg: "User not found" });
             }
@@ -59,6 +57,7 @@ const authProviderMiddleware = async (req, res, next) => {
     }
 };
 
+// Here the user can access the purchased course or the provider can access his own course
 const courseAccessMiddleware = async(req, res, next) => {
     const courseId = req.params.courseId; 
     const token = req.header('Authorization');
@@ -79,14 +78,14 @@ const courseAccessMiddleware = async(req, res, next) => {
              if(providerData){
                 if(providerData.role === "provider"){
                      const providerVerify = providerData.courses.some(data => data === courseId)
-                     req.provider = providerData;
+                     req.user = providerData;
                      next();  // Continue to the next middleware or route
                     }else{
                         res.status(400).send({msg : "Aunauthorized Access"})
                     }
               }
                 else if(userData){
-                    const isCoursePurchased = userData.purchaseCourse.some(data => data.course === courseId)
+                    const isCoursePurchased = userData.purchaseCourse.some(data => data.courseId === courseId)
                     
                     if(isCoursePurchased){
                         req.user = userData
@@ -103,10 +102,11 @@ const courseAccessMiddleware = async(req, res, next) => {
         return res.status(500).json({ msg: "Token verification error"});
     }
 }
+
+// Here the provider can modify his own course
 const courseModifyMiddleware = async(req, res, next) => {
     const courseId = req.params.courseId
     const token = req.header('Authorization');
-    console.log("reached")
     if (!token) {
         return res.status(401).json({ message: "Unauthorized HTTP, Token not provided" });
     }
@@ -117,7 +117,6 @@ const courseModifyMiddleware = async(req, res, next) => {
         const isVerified = jwt.verify(jwtToken, process.env.JWT_SECRET);
         if (isVerified) {
             const providerData = await Provider.findOne({ email: isVerified.email });
-            console.log( "This is the provider data" + providerData)
             if (!providerData) {
                 return res.status(401).json({ msg: "User not found" });
             }
@@ -125,6 +124,7 @@ const courseModifyMiddleware = async(req, res, next) => {
                      const providerVerify = providerData.courses.some(data => data.equals(courseId))
                      if(providerVerify){
                          req.provider = providerData;
+                         req.isCourseModify = true; 
                          next();  // Continue to the next middleware or route
                         }else{
                             res.status(400).send({msg : "Aunauthorized Access course not found"})
@@ -139,6 +139,48 @@ const courseModifyMiddleware = async(req, res, next) => {
         return res.status(500).json({ msg: "Token verification error" });
     }
 }
+
+// Middleware to give true or false wether the course belongs to the provider or not. 
+const isCourseModify = async (req, res, next) => {
+    try {
+        const courseId = req.params.courseId;
+        const token = req.header("Authorization");
+
+        //User cannot modify the course
+        req.isCourseModify = false;
+
+        // If no token is provided, move to next (user can still see the course)
+        if (!token) {
+            return next();
+        }
+
+        const jwtToken = token.replace("Bearer", "").trim();
+        const isVerified = jwt.verify(jwtToken, process.env.JWT_SECRET);
+        if (!isVerified) {
+            return next(); // User is not logged in, move to next
+        }
+
+        // Fetch provider details
+        console.log("Here")
+        const providerData = await Provider.findOne({ email: isVerified.email }).select("role courses");
+        console.log("Provider data" + providerData)
+
+        // If user is not a provider, move to next
+        if (!providerData || providerData.role !== "provider") {
+            return next();
+        }
+
+        // Check if the provider owns the course
+        const providerVerify = providerData.courses.some(course => course.equals(courseId));
+        req.isCourseModify = providerVerify;
+
+        return next(); // Move to next function
+
+    } catch (err) {
+        console.error("Token verification error:", err);
+        return next(); // Continue execution without blocking normal users
+    }
+};
 
 const authAdminMiddleware = async(req, res, next) => {
     const token = req.header('Authorization');
@@ -167,4 +209,4 @@ const authAdminMiddleware = async(req, res, next) => {
                 }
 }
 
-module.exports = {authUserMiddleware, authProviderMiddleware, courseAccessMiddleware, courseModifyMiddleware, authAdminMiddleware};
+module.exports = {authUserMiddleware, authProviderMiddleware, courseAccessMiddleware, courseModifyMiddleware, authAdminMiddleware, isCourseModify};

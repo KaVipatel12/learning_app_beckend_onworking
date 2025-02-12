@@ -3,34 +3,46 @@ const {Course} = require("../Models/course-model")
 const {Chapter} = require("../Models/course-model");
 const { fetchCourses } = require("./courseController");
 const { lineTo } = require("pdfkit");
+const Review = require("../Models/review-model")
 
 // Fetching the courses that Educator has
-const fetchProviderCourses = async(req, res) => {
-    const providerId = req.provider._id; 
-  try{
-      const fetchDetails = await Provider.findById(providerId, "courses"); 
+const fetchProviderCourses = async (req, res) => {
+    const providerId = req.provider._id;
+    try {
+        const fetchDetails = await Provider.findById(providerId, "courses");
 
-      const courseIds = fetchDetails.courses.map(ids => ids)
-      let fetchCourse;
-      if(courseIds.length > 0){
-          fetchCourse = await Course.find({"_id" : {$in : courseIds}}, "title price duration courseImage")
-      }
-
-      if(!fetchDetails){
-          return res.status(400).send({msg : "Login to view the profile"})
-      }
-      
-      const coursesWithImage = fetchCourse.map(courses => {
-        return {
-            ...courses.toObject(), 
-            courseImage: `/uploads/${course.courseImage.replace(/\\/g, '/')}`,
+        if (!fetchDetails) {
+            return res.status(400).json({ msg: "Login to view the profile" });
         }
-      })
-      return res.status(200).send({msg : fetchDetails , courses : coursesWithImage})
-  }catch(error){
-      res.status(500).send({msg : "Error"})
-  }
-}
+
+        const courseIds = fetchDetails.courses;
+        if (!courseIds || courseIds.length === 0) {
+            return res.status(200).json({ msg: "No courses found", courses: [] });
+        }
+
+        const fetchCourse = await Course.find(
+            { _id: { $in: courseIds } },
+            "title price duration courseImage"
+        );
+
+        if (!fetchCourse || fetchCourse.length === 0) {
+            return res.status(200).json({ msg: "No courses found", courses: [] });
+        }
+
+        const coursesWithImage = fetchCourse.map(course => ({
+            ...course.toObject(),
+            courseImage: course.courseImage ? `/uploads/${course.courseImage.replace(/\\/g, '/')}` : "", // Handle empty images
+        }));
+
+        console.log("Sending courses:", coursesWithImage);
+
+        return res.status(200).json({ courses: coursesWithImage });
+    } catch (error) {
+        console.error("Error fetching provider courses:", error);
+        res.status(500).json({ msg: "Internal server error" });
+    }
+};
+
 
 const fetchProviderCourseMainPage = async (req, res) => {
     try {
@@ -151,6 +163,7 @@ const courseUpdatePage = async (req, res) => {
             res.status(400).send({ msg: "Provider not found or update failed" });
         }
     } catch (error) {
+        console.log(error)
         res.status(500).send({ msg: "Internal server error", error: error.message });
     }
     
@@ -175,7 +188,8 @@ const courseDeletePage = async (req, res) => {
             { $pull: { courses: deleteCourse._id } },  // Remove course ID from provider's courses
             { new: true, useFindAndModify: false }
         ).populate('courses');  // Populate to show the updated courses list
-
+        
+        const deleteReviews = await Review 
         if (updatedProvider) {
             return res.status(200).send({ msg: "Course and its chapters deleted successfully", updatedProvider });
         } else {
@@ -188,30 +202,23 @@ const courseDeletePage = async (req, res) => {
 
 // Add the chapters in the course by the provider, Adding the chapters details which is stored in the chapter model
 const chapterAddPage = async (req, res) => {
-    const chapters = req.body ? JSON.parse(req.body.chapters) : []; // Parse chapters from request body
-    const courseId = req.params.courseId;
     try {
-        if (!chapters || chapters.length === 0) {
-            return res.status(400).send({ msg: "No chapters provided" });
+        const { chapters } = req.body; // No need for JSON.parse(req.body.chapters)
+        const courseId = req.params.courseId;
+
+        if (!chapters || !Array.isArray(chapters) || chapters.length === 0) {
+            return res.status(400).json({ msg: "No chapters provided or invalid format" });
         }
 
-        const newChapters = [];
-
-        // Iterate over chapters and create each one with its corresponding video
-        for (let i = 0; i < chapters.length; i++) {
-            const { title, description, videoUrl } = chapters[i];
-
-            const newChapter = await Chapter.create({
-                title,
-                description,
-                videoUrl,
+        const newChapters = await Promise.all(chapters.map(async (chapter) => {
+            return await Chapter.create({
+                title: chapter.title,
+                description: chapter.description,
+                videoUrl: chapter.videoUrl,
                 courseId,
             });
+        }));
 
-            newChapters.push(newChapter);
-        }
-
-        // Add the created chapters to the course
         const updatedCourse = await Course.findByIdAndUpdate(
             courseId,
             { $push: { chapters: { $each: newChapters.map(ch => ch._id) } } },
@@ -219,15 +226,16 @@ const chapterAddPage = async (req, res) => {
         ).populate('chapters');
 
         if (updatedCourse) {
-            res.status(200).send({ msg: "Chapters added successfully", updatedCourse });
+            res.status(200).json({ msg: "Chapters added successfully", updatedCourse });
         } else {
-            res.status(400).send({ msg: "Error adding chapters to the course" });
+            res.status(400).json({ msg: "Error adding chapters to the course" });
         }
     } catch (error) {
-        res.status(500).send({ msg: "Internal server error", error: error.message });
+        res.status(500).json({ msg: "Internal server error", error: error.message });
         console.error(error);
     }
 };
+
 
 // Delete a chapter in the course by the provider, Delete a chapter details which is stored in the chapter model
 const chapterDeletePage = async (req, res) => {

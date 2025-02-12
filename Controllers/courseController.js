@@ -36,7 +36,6 @@ const fetchCourses = async (req, res) => {
         query.price = { $lte: parseInt(price) }; // Fetch courses with price less than or equal to the specified value
     }
 
-      console.log(query)
       // Fetch the data with pagination and optional filters
       const courseData = await Course.find(query, "title price provider courseImage category")
           .skip(skip)
@@ -65,11 +64,10 @@ const fetchCourses = async (req, res) => {
 
 // fetch specific course details which is present in the course database.  
 const fetchCourseMainPage = async (req, res) => {
-    try {
-      
+    try {      
       const courseId = req.params.courseId; 
-      const courseData = await Course.findById(courseId)  
-
+      const courseData = await Course.findById(courseId) 
+      const isCourseModify = req.isCourseModify; 
       if (!courseData || courseData.length === 0) {
         return res.status(404).send({ msg: "No courses found" });
       }
@@ -79,8 +77,9 @@ const fetchCourseMainPage = async (req, res) => {
             courseImage : `/uploads/${courseData.courseImage}`
         }
       
-      res.status(200).send({ msg: courseDataWithImage });
+      res.status(200).send({ msg: courseDataWithImage, isCourseModify });
     } catch (error) {
+      console.log(error)
       res.status(500).send({ msg: "Server error", error: error.message });
     }
 };
@@ -88,15 +87,13 @@ const fetchCourseMainPage = async (req, res) => {
 // fetch all the chapters of the specific course present in the database  
 const fetchChaptersMainPage = async(req, res) => {
   const courseId = req.params.courseId;
-
+  const isCourseModify = req.isCourseModify; 
   try{
     const chapters = await Chapter.find({courseId}, "title courseId")
-
-      console.log(chapters)
       if(!chapters){
         return res.status(400).send({msg : "Chapters not added"})
       }
-      return res.status(200).send({msg : chapters})
+      return res.status(200).send({msg : chapters, isCourseModify})
     }catch(error){
       return res.status(500).send({msg : "Internal servor error"})
     }
@@ -105,7 +102,7 @@ const fetchChaptersMainPage = async(req, res) => {
 // fetch specific chapter details which is present in the database 
 const fetchChapters = async(req, res) => {
   const chapterId = req.params.chapterId;
-  console.log(chapterId)
+  const isCourseModify = req.isCourseModify; 
   try{
 
     const chapters = await Chapter.findById(chapterId).populate({
@@ -119,7 +116,7 @@ const fetchChapters = async(req, res) => {
       if(!chapters){
         return res.status(400).send({msg : "Chapters not added"})
       }
-      return res.status(200).send({msg : chapters})
+      return res.status(200).send({msg : chapters, isCourseModify})
     }catch(error){
       return res.status(500).send({msg : "Internal servor error"})
     }
@@ -151,7 +148,6 @@ const fetchChapterComments = async (req, res) => {
         comments: chapter.comment  // Return the comments associated with this chapter
       });
     } catch (err) {
-      console.error(err);
       return res.status(500).send({ msg: "An error occurred while fetching comments" });
     }
 };
@@ -167,20 +163,17 @@ const fetchAllReviews = async (req, res) => {
     if (!courseReview) {
       return res.status(404).json({ message: "No reviews found for this course." });
     }
-    console.log(courseReview)
     const reviewArray = []
     courseReview.reviews.forEach(course => {
       reviewArray.push(course.stars)
     })
     
-        console.log(reviewArray)
     const addReviews = reviewArray.reduce((acc, curr) => acc + curr , 0);   // Reducing the array in sum of all array elements
     const averageReview = addReviews/ (reviewArray.length)     // Taking the average of reviews. 
     const formattedAverage = averageReview.toFixed(1);         // Only one number after decimal point   eg. 3.22123 => 3.2
     res.status(200).send({ msg : formattedAverage });
 
 } catch (error) {
-  console.log(error)
    return res.status(500).send({ msg: "Error" });
 }
 };

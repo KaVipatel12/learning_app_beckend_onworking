@@ -4,22 +4,43 @@ const Provider = require("../Models/provider-model")
 
 // Fetching all the users that has an account. 
 const fetchUsers = async (req, res) => {
-    try{
-        const { page = 1, limit = 10, courseName } = req.query;
+    try {
+        const { page = 1, limit = 10, search} = req.query;
+        let query = {};
+        
+        // Using regex for flexible searching
+        if (search) {
+            query = {
+                $or: [
+                    { username: { $regex: search, $options: "i" } }, // Case-insensitive search
+                    { email: { $regex: search, $options: "i" } },
+                    { mobile: { $regex: search, $options: "i" } }
+                ]
+            };
+        }
+
+        // Pagination
         const pageNumber = parseInt(page);
         const limitNumber = parseInt(limit);
         const skip = (pageNumber - 1) * limitNumber;
 
-        const userList = await User.find({}, "username mobile email controll").skip(skip).limit(limitNumber)
-        if(!userList){
-            return  res.status(400).send({msg : null})
+        // Fetch users based on query
+        let userList = await User.find(query, "username mobile email controll purchaseCourse")
+            .skip(skip)
+            .limit(limitNumber);
+
+        if (!userList || userList.length === 0) {
+            return res.status(400).send({ msg: null });
         }
-        
-        return res.status(200).send({msg : userList})
-    }catch(eror){
-        return  res.status(500).send({msg : "Error"})
+
+        return res.status(200).send({ msg: userList });
+
+    } catch (error) {
+        console.error(error);
+        return res.status(500).send({ msg: "Error" });
     }
-}
+};
+
 
 // Deleting the user 
 const deleteUser = async (req, res) => {
@@ -40,12 +61,21 @@ const deleteUser = async (req, res) => {
 // Fetching all the provider that has an account. 
 const fetchProviders = async (req, res) => {
     try{
-        const { page = 1, limit = 10, courseName } = req.query;
+        const { page = 1, limit = 10, search } = req.query;
         const pageNumber = parseInt(page);
         const limitNumber = parseInt(limit);
         const skip = (pageNumber - 1) * limitNumber;
+        let query = {}
 
-        const providerList = await Provider.find({}, "username mobile email courses").skip(skip).limit(limitNumber)
+        if(search){
+            query = {
+                $or: [
+                    { username: { $regex: search, $options: "i" } }, // Case-insensitive search
+                    { email: { $regex: search, $options: "i" } }
+                ]
+            }
+        }
+        const providerList = await Provider.find(query, "username mobile email courses").skip(skip).limit(limitNumber)
         if(!providerList){
             return  res.status(400).send({msg : null})
         }
