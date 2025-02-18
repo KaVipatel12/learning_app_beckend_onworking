@@ -21,6 +21,9 @@ const userSchema = mongoose.Schema({
         type : String,
         default : "student"
     },
+    category : [{
+        type: String
+    }], 
     comment:[
         {type: mongoose.Schema.Types.ObjectId, ref: 'Comment'}
     ],

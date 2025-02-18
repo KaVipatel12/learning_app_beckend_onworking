@@ -5,6 +5,26 @@ const Review = require("../Models/review-model")
 const Comment = require("../Models/comments-model")
 const Cart = require("../Models/cart-model")
 const mongoose = require("mongoose")
+ 
+
+// Fetching the courses of specific category which is favourite of user
+
+const fetchCategoryCourses = async (req, res) => {
+    const categories = req.user.category; 
+    
+   try { if(categories.length === 0){
+     return res.status(401).send({msg : "Categories not Defined"})
+    }
+    
+    const fetchCourses = await Course.find({category : {$in : categories}}) 
+    if(!fetchCourses){
+      return res.status(401).send({msg : "No courses found"})
+    }
+    res.status(200).send({msg : fetchCourses});
+   }catch(error){
+    res.status(500).send({msg : "Error"})
+   }
+  }
 // Add the comment by the user. 
 const addComment = async(req, res) => {
   const {comment} = req.body;
@@ -179,20 +199,21 @@ const fetchReview = async (req, res) => {
 const purchaseCourse = async (req, res) => {
   const courseData = req.body;  // Assume this is an array of courseIds
   const userId = req.user._id; 
-
+  
+  console.log(courseData)
   try {
     // Fetch the user to check already purchased courses
     const user = await User.findById(userId);
 
     // Filter out already purchased courses
-    const alreadyPurchasedCourseIds = user.purchaseCourse.map(p => p.courseId.toString()); 
+    const alreadyPurchasedCourseIds = user.purchaseCourse.map(p => p.courseId); 
     const newCourses = courseData.filter(course => !alreadyPurchasedCourseIds.includes(course.courseId));
 
     // If no new courses to add, return a message
     if (newCourses.length === 0) {
       return res.status(400).send({ msg: "Already purchased" });
     }
-    
+  
     // If there are new courses to add, push them to the user's purchaseCourse array
     const purchaseCourse = await User.findByIdAndUpdate(
       userId,
@@ -248,7 +269,6 @@ const cartFunctionality = async (req, res) => {
   const userId = req.user._id; 
 
   try {
-    // Find the user's cart
     let userCart = await Cart.findOne({ userId });
 
     if (!userCart) {
@@ -258,7 +278,7 @@ const cartFunctionality = async (req, res) => {
         cartItems: [{ courseId, createdAt: Date.now() }]
       });
 
-      // Associate the new cart with the user
+      // Connecting the new cart with the user
       await User.findByIdAndUpdate(userId, {cart: newCart._id});
 
       return res.status(200).send({ msg: "Item added to cart" });
@@ -286,7 +306,6 @@ const cartFunctionality = async (req, res) => {
   }
 };
 
-
 // fetching the cart of the particular user
 const fetchCart = async (req, res) => {
   const userId = req.user._id; 
@@ -299,8 +318,9 @@ const fetchCart = async (req, res) => {
       res.status(200).send({msg : null})
     } else {
       const courseIds = findUser.cartItems.map(item => item.courseId);
-      const cartItems = await Course.find({ '_id' : { $in : courseIds}}, "title price duration category courseImage")
-      res.status(200).send({msg : cartItems})
+      const cartItems = await Course.find({ '_id' : { $in : courseIds}}, "title price duration category courseImage");
+      console.log("Cart data" + cartItems)
+      res.status(200).send({ msg : cartItems })
     }
   } catch (error) {
     console.log(error);
@@ -308,4 +328,73 @@ const fetchCart = async (req, res) => {
   }
 };
 
-module.exports = {addComment, deleteComment, addOrUpdateReview, purchaseCourse, fetchPurchasedCourse, fetchReview, cartFunctionality, fetchCart, fetchComment}
+const deleteCart = async (req, res) => {
+  try {
+    const courseId = req.params.courseId; 
+    const userId = req.user._id;
+
+    // Find the user's cart
+    const cart = await Cart.findOne({ userId });
+
+    if (!cart) {
+      return res.status(404).json({ msg: "Cart not found" });
+    }
+
+    // Check if the course exists in cart
+    const itemExists = cart.cartItems.some(item => item.courseId.toString() === courseId);
+
+    if (!itemExists) {
+      return res.status(404).json({ msg: "Course not found in cart" });
+    }
+
+    // Remove the specific course from cartItems
+    await Cart.updateOne(
+      { userId },
+      { $pull: { cartItems: { courseId: courseId } } }
+    );
+
+    res.status(200).json({ msg: "Course removed from cart successfully" });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ msg: "Server error" });
+  }
+};
+
+// To store the favorite course category of student. 
+const category = async(req, res) => {
+  const categories = req.body; 
+  const userId = req.user._id
+
+try { 
+  const user = await User.findById(userId); 
+  if(!user){
+   return res.status(401).status("Error"); 
+  }
+  
+  // Checking the items available in the category
+  let alreadyAvailableCategory = user.category.map((items) => items); 
+  if(alreadyAvailableCategory.length > 3){
+    return res.status(401).send({msg : "Already category Added"}); 
+  }
+  let filterCategories = categories.filter((item) => !alreadyAvailableCategory.includes(item)); 
+
+  if (filterCategories.length === 0) {
+    return res.status(500).send({msg: "Categories already added"});
+  }
+
+  const addCategory = await User.findByIdAndUpdate(userId , {
+    $push : {category : filterCategories}, 
+  }, {$new : true})
+  
+  if(!addCategory){
+    return res.status(401).send({msg : "Error", error}); 
+  }
+
+  res.status(200).send({msg : "Categories Added"}); 
+}catch(error){
+  res.status(500).send({msg : "Error"}); 
+}
+}
+
+module.exports = { fetchCategoryCourses ,addComment, deleteComment, addOrUpdateReview, purchaseCourse, fetchPurchasedCourse, fetchReview, cartFunctionality, fetchCart, fetchComment, deleteCart, category}
