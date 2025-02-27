@@ -53,7 +53,7 @@ app.use(session({
 }));
 
 app.use(cors({
-  origin: ['http://localhost:3000'],  // Replace with your frontend domain
+  origin: ['http://localhost:3000', 'http://192.168.142.100:3000'],  // Replace with your frontend domain
   methods: ['GET', 'POST', 'PUT', 'DELETE'],
   credentials: true // Allow cookies to be sent
 }));
@@ -68,7 +68,7 @@ app.use("/api", studentRouter)
 
 app.use(errorMiddleware)
 connectDb().then(()=>{
-    app.listen( PORT,()=>{
+    app.listen( PORT, '0.0.0.0' , ()=>{
         console.log("App is listened on the port 8000")
     })
 })

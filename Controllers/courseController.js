@@ -5,12 +5,12 @@ const Review = require("../Models/review-model")
 // Fetch all the courses or the specific searched course using regex, It is used on home page and searched page
 const fetchCourses = async (req, res) => {
   try {
-      // Extract page, limit, courseName, provider, and category from query parameters
-      const { page = 1, limit = 10, courseName, provider, category, price } = req.query;
+      // Extract page, limit, and filters from query parameters
+      const { page = 1, limit = 4, courseName, provider, category, price } = req.query;
 
       // Convert page and limit to numbers
-      const pageNumber = parseInt(page);
-      const limitNumber = parseInt(limit);
+      const pageNumber = Number(page);
+      const limitNumber = Number(limit);
 
       // Calculate the number of documents to skip
       const skip = (pageNumber - 1) * limitNumber;
@@ -18,49 +18,50 @@ const fetchCourses = async (req, res) => {
       // Build the query object for fetching courses
       let query = {};
 
-      // Filter by courseName if provided
       if (courseName) {
-          query.title = new RegExp(courseName, 'i'); // case-insensitive search for course name
+          query.title = new RegExp(courseName, 'i'); // Case-insensitive search
       }
-
-      // Filter by provider if provided
       if (provider) {
-          query.provider = new RegExp(provider, 'i'); // case-insensitive search for provider
+          query.provider = new RegExp(provider, 'i'); // Case-insensitive search
       }
-
-      // Filter by category if provided
       if (category) {
-          query.category = new RegExp(category, 'i'); // case-insensitive search for category
+          query.category = new RegExp(category, 'i'); // Case-insensitive search
       }
       if (price) {
-        query.price = { $lte: parseInt(price) }; // Fetch courses with price less than or equal to the specified value
-    }
+          query.price = { $lte: parseInt(price) }; // Fetch courses within price range
+      }
 
-      // Fetch the data with pagination and optional filters
+      // Get total count of courses matching the filters (for pagination)
+      const totalCourses = await Course.countDocuments(query);
+
+      // Fetch paginated data
       const courseData = await Course.find(query, "title price provider courseImage category")
           .skip(skip)
           .limit(limitNumber);
 
-      // Check if data is found
+      // If no courses are found
       if (!courseData.length) {
-          return res.status(404).send({ msg: "No courses found" });
+          return res.status(404).send({ msg: "No courses found", totalCourses: 0, currentPage: pageNumber });
       }
 
       // Format course data and include the image path
-      const coursesWithImage = courseData.map(courses => {
-        return {
-            ...courses.toObject(), 
-            courseImage : `/uploads/${courses.courseImage}`
-        }
+      const coursesWithImage = courseData.map(course => ({
+          ...course.toObject(), 
+          courseImage: `/uploads/${course.courseImage}`
+      }));
+
+      // Send the paginated data along with total course count
+      res.status(200).send({ 
+          msg: coursesWithImage, 
+          totalCourses, 
+          currentPage: pageNumber 
       });
 
-      // Send the paginated data
-      res.status(200).send({ msg: coursesWithImage, currentPage: pageNumber });
   } catch (error) {
-      // Handle any server errors
       res.status(500).send({ msg: "Server error", error: error.message });
   }
 };
+
 
 // fetch specific course details which is present in the course database.  
 const fetchCourseMainPage = async (req, res) => {

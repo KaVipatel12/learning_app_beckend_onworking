@@ -131,9 +131,9 @@ const courseAddPage = async (req, res) => {
         ).populate('courses'); // Populate to show the updated courses list
 
         if (updatedProvider) {
-            res.status(200).send({ msg: "Course Added", updatedProvider });
+           return res.status(200).send({ msg: "Course Added", updatedProvider, courseId : newCourse._id });
         } else {
-            res.status(400).send({ msg: "Provider not found or update failed" });
+           return res.status(400).send({ msg: "Provider not found or update failed" });
         }
     } catch (error) {
         res.status(500).send({ msg: "Internal server error", error: error.message });
